@@ -18,12 +18,6 @@ type Haiku struct {
 	When time.Time `json:"when" bson:"when"`
 }
 
-var tpl *template.Template
-
-func init() {
-	tpl = template.Must(template.ParseGlob("templates/*.html"))
-}
-
 func main() {
 	session, err := mgo.Dial("mongodb://localhost:27017")
 	if err != nil {
@@ -41,8 +35,6 @@ func main() {
 
 func admin(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("GET admin")
-
 		session := s.Copy()
 		defer session.Close()
 
@@ -50,11 +42,11 @@ func admin(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 		err := session.DB("canaryhaiku").C("verses").Find(nil).All(&Haikus)
 		if err != nil {
 			log.Fatalln(err)
+			return
 		}
 
-		fmt.Println(Haikus)
-
-		tpl.ExecuteTemplate(w, "admin.html", Haikus)
+		tpl, err := template.New("").ParseFiles("templates/admin.html", "templates/base.html")
+		err = tpl.ExecuteTemplate(w, "admin", Haikus)
 	}
 }
 
@@ -69,13 +61,12 @@ func index(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 		//err := session.DB("canaryhaiku").C("verses").Find(bson.M{"when": bson.M{"$gte": d}}).One(&Verse)
 		err := session.DB("canaryhaiku").C("verses").Find(bson.M{"user": "bosse"}).One(&Verse)
 		if err != nil {
-			log.Println("Error finding verse")
 			log.Println(err)
 			return
 		}
 
-		log.Println(Verse)
-		err = tpl.ExecuteTemplate(w, "index.html", Verse)
+		tpl, err := template.New("").ParseFiles("templates/index.html", "templates/base.html")
+		err = tpl.ExecuteTemplate(w, "index", Verse)
 		if err != nil {
 			log.Println(err)
 			return
@@ -86,8 +77,12 @@ func index(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 func create(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			fmt.Println("GET create ")
-			tpl.ExecuteTemplate(w, "create.html", nil)
+			tpl, err := template.New("").ParseFiles("templates/create.html", "templates/base.html")
+			err = tpl.ExecuteTemplate(w, "create", nil)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 		} else if r.Method == "POST" {
 			fmt.Println("POST create")
 
@@ -112,6 +107,7 @@ func create(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
+			http.Redirect(w, r, "/admin", http.StatusSeeOther)
 		}
 	}
 }

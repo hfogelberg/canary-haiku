@@ -1,17 +1,12 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Canary Haiku</title>
-  </head>
-  <body>
-    <h1>Create Haiku</h1>
+{{define "create"}}
+<div class="create-haiku">
+  <h1>Create Haiku</h1>
 
-    <form class="createHaiku" action="/create" method="post">
-      <textarea name="text" rows="8" cols="80"></textarea><br>
-      <input type="date" name="displayDate">
-      <input type="text" name="createdBy" value="" placeholder="Username">
-      <input type="submit" name="submit" value="Submit">
-    </form>
-  </body>
-</html>
+  <form class="createHaiku" action="/create" method="post">
+    <textarea name="text" rows="8" cols="80"></textarea><br>
+    <input type="date" name="displayDate">
+    <input type="text" name="createdBy" value="" placeholder="Username">
+    <input type="submit" name="submit" value="Submit">
+  </form>
+</div>
+{{end}}
