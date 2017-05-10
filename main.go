@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/gorilla/context"
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -15,79 +16,61 @@ type Haiku struct {
 	When time.Time `json:"when" bson:"when"`
 }
 
-type Adapter func(http.Handler) http.Handler
+var tpl *template.Template
+
+func init() {
+	tpl = template.Must(template.ParseGlob("templates/*.html"))
+}
 
 func main() {
-	db, err := mgo.Dial("mongodb://localhost:27017")
+	session, err := mgo.Dial("mongodb://localhost:27017")
 	if err != nil {
-		log.Fatal("Cannot connect to Db", err)
-		return
+		panic(err)
 	}
-	defer db.Close()
+	defer session.Close()
+	session.SetMode(mgo.Monotonic, true)
 
-	h := Adapt(http.HandlerFunc(handle), withDB(db))
-	http.Handle("/haiku", context.ClearHandler(h))
+	http.HandleFunc("/", index)
+	http.HandleFunc("/create", create(session))
 
-	err = http.ListenAndServe(":3000", nil)
-	if err != nil {
-		log.Fatal(err)
-		return
+	http.ListenAndServe(":3000", nil)
+}
+
+func create(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			fmt.Println("GET create ")
+			tpl.ExecuteTemplate(w, "create.html", nil)
+		} else if r.Method == "POST" {
+			fmt.Println("POST create")
+
+			err := r.ParseForm()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			var haiku Haiku
+			haiku.Text = r.PostFormValue("text")
+			haiku.User = r.PostFormValue("user")
+			haiku.When = time.Now()
+
+			session := s.Copy()
+			defer session.Close()
+
+			if err := session.DB("canaryhaiku").C("verses").Insert(&haiku); err != nil {
+				log.Println("Failed insert")
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+		}
 	}
 }
 
-func handle(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case "GET":
-		getHaikus(w, r)
-	case "POST":
-		createHaiku(w, r)
-	default:
-		http.Error(w, "Not supported", http.StatusMethodNotAllowed)
-	}
-}
-
-func createHaiku(w http.ResponseWriter, r *http.Request) {
-	log.Println("Create Haiku")
-	err := r.ParseForm()
+func index(w http.ResponseWriter, r *http.Request) {
+	err := tpl.ExecuteTemplate(w, "index.html", nil)
 	if err != nil {
 		log.Println(err)
 		return
-	}
-
-	var haiku Haiku
-	haiku.Text = r.PostFormValue("text")
-	haiku.User = r.PostFormValue("user")
-	haiku.When = time.Now()
-
-	log.Println("Haiku", haiku)
-
-	db := context.Get(r, "database").(*mgo.Session)
-	if err := db.DB("canryhaiku").C("verses").Insert(&haiku); err != nil {
-		log.Println("Failed insert")
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	log.Println("Insert OK")
-}
-
-func getHaikus(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func Adapt(h http.Handler, adapters ...Adapter) http.Handler {
-	for _, adapter := range adapters {
-		h = adapter(h)
-	}
-	return h
-}
-
-func withDB(db *mgo.Session) Adapter {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			dbsession := db.Copy()
-			defer dbsession.Close() // clean up
-			context.Set(r, "database", dbsession)
-			h.ServeHTTP(w, r)
-		})
 	}
 }
