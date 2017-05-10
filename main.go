@@ -8,11 +8,13 @@ import (
 	"time"
 
 	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Haiku struct {
-	Text string    `json:"text" bson:"text"`
-	User string    `json:"user" bson:"user"`
+	Text string `json:"text" bson:"text"`
+	User string `json:"user" bson:"user"`
+	// Display time.Time `json:"displayDate" bson:"displayDate"`
 	When time.Time `json:"when" bson:"when"`
 }
 
@@ -30,10 +32,55 @@ func main() {
 	defer session.Close()
 	session.SetMode(mgo.Monotonic, true)
 
-	http.HandleFunc("/", index)
+	http.HandleFunc("/", index(session))
+	http.HandleFunc("/admin", admin(session))
 	http.HandleFunc("/create", create(session))
 
 	http.ListenAndServe(":3000", nil)
+}
+
+func admin(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("GET admin")
+
+		session := s.Copy()
+		defer session.Close()
+
+		var Haikus []*Haiku
+		err := session.DB("canaryhaiku").C("verses").Find(nil).All(&Haikus)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		fmt.Println(Haikus)
+
+		tpl.ExecuteTemplate(w, "admin.html", Haikus)
+	}
+}
+
+func index(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET Index")
+		session := s.Copy()
+		defer session.Close()
+
+		var Verse *Haiku
+		// d := time.Now()
+		//err := session.DB("canaryhaiku").C("verses").Find(bson.M{"when": bson.M{"$gte": d}}).One(&Verse)
+		err := session.DB("canaryhaiku").C("verses").Find(bson.M{"user": "bosse"}).One(&Verse)
+		if err != nil {
+			log.Println("Error finding verse")
+			log.Println(err)
+			return
+		}
+
+		log.Println(Verse)
+		err = tpl.ExecuteTemplate(w, "index.html", Verse)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
 }
 
 func create(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +99,9 @@ func create(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 
 			var haiku Haiku
 			haiku.Text = r.PostFormValue("text")
-			haiku.User = r.PostFormValue("user")
+			haiku.User = r.PostFormValue("createdBy")
+			// dt := r.PostFormValue("displayDate")
+			// haiku.Display = time.Parse("2006-01-02", dt)
 			haiku.When = time.Now()
 
 			session := s.Copy()
@@ -64,13 +113,5 @@ func create(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-	}
-}
-
-func index(w http.ResponseWriter, r *http.Request) {
-	err := tpl.ExecuteTemplate(w, "index.html", nil)
-	if err != nil {
-		log.Println(err)
-		return
 	}
 }
