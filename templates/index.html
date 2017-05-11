@@ -1,5 +1,18 @@
 {{define "content"}}
 <div class="daily-haiku">
-  <p>{{.Text}}</p>
+  <div class="verse">
+    <p>{{.Text}}</p>
+  </div>
+
+  <div id="footer">
+    <a  class="btn" href="#open-modal"><img src="/public/img/question.svg" alt=""></a>
+  </div>
+</div>
+
+<div id="open-modal" class="modal-window">
+  <div>
+    <a href="#modal-close" title="Close" class="modal-close">X</a>
+    Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+   </div>
 </div>
 {{end}}
