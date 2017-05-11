@@ -18,6 +18,8 @@ type Haiku struct {
 	When time.Time `json:"when" bson:"when"`
 }
 
+var tpl *template.Template
+
 func main() {
 	session, err := mgo.Dial("mongodb://localhost:27017")
 	if err != nil {
@@ -25,6 +27,13 @@ func main() {
 	}
 	defer session.Close()
 	session.SetMode(mgo.Monotonic, true)
+
+	// serve assets
+	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
+	// fs := http.FileServer(http.Dir("public"))
+	// http.Handle("/public/styles/", http.StripPrefix("/public/", fs))
+
+	// http.Handle("/canary-haiku/public/styles", http.StripPrefix("/canary-haiku/public/styles", http.FileServer(http.Dir("./canary-haiku/public/styles"))))
 
 	http.HandleFunc("/", index(session))
 	http.HandleFunc("/admin", admin(session))
@@ -46,13 +55,16 @@ func admin(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tpl, err := template.New("").ParseFiles("templates/admin.html", "templates/base.html")
-		err = tpl.ExecuteTemplate(w, "admin", Haikus)
+		err = tpl.ExecuteTemplate(w, "base", Haikus)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 }
 
 func index(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET Index")
 		session := s.Copy()
 		defer session.Close()
 
@@ -66,7 +78,7 @@ func index(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tpl, err := template.New("").ParseFiles("templates/index.html", "templates/base.html")
-		err = tpl.ExecuteTemplate(w, "index", Verse)
+		err = tpl.ExecuteTemplate(w, "base", Verse)
 		if err != nil {
 			log.Println(err)
 			return
@@ -78,9 +90,9 @@ func create(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			tpl, err := template.New("").ParseFiles("templates/create.html", "templates/base.html")
-			err = tpl.ExecuteTemplate(w, "create", nil)
+			err = tpl.ExecuteTemplate(w, "base", nil)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				return
 			}
 		} else if r.Method == "POST" {
