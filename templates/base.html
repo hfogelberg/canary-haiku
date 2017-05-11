@@ -4,11 +4,17 @@
   <head>
     <meta charset="utf-8">
     <title>Kanarisk Haiku</title>
+    <link rel="stylesheet" href="/public/styles/reset.css">
     <link rel="stylesheet" href="/public/styles/master.css">
+    <link href="https://fonts.googleapis.com/css?family=Dancing+Script" rel="stylesheet">
   </head>
   <body>
-    <h1>canary-haiku</h1>
-    {{template "content" .}}
+    <header>
+      <h1>Canary Haiku</h1>
+    </header>
+    <div class="container">
+      {{template "content" .}}
+    </div>
   </body>
 </html>
 {{end}}
