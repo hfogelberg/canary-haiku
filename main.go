@@ -35,6 +35,7 @@ func main() {
 	http.HandleFunc("/admin", admin(session))
 	http.HandleFunc("/create", create(session))
 	http.HandleFunc("/about", about)
+	http.HandleFunc("/archive", create(session))
 
 	http.ListenAndServe(":3000", nil)
 }
@@ -45,6 +46,27 @@ func about(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatalln(err)
 		return
+	}
+}
+
+func archive(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session := s.Copy()
+		defer session.Close()
+
+		var Haikus []*Haiku
+		err := session.DB("canaryhaiku").C("verses").Find(nil).All(&Haikus)
+		if err != nil {
+			log.Fatalln(err)
+			return
+		}
+
+		tpl, err := template.New("").ParseFiles("templates/archive.html", "templates/base.html")
+		err = tpl.ExecuteTemplate(w, "base", Haikus)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 }
 
