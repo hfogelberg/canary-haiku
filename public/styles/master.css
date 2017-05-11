@@ -33,6 +33,12 @@ h1 {
   font-weight: 400;
 }
 
+h2 {
+  margin-bottom: 1em;
+  margin-top: 1em;
+  text-align: center;
+  font-size: 1.8em;
+}
 
 header ul {
   margin-left: 1em;
@@ -146,11 +152,25 @@ header  a:active {
   color: #495867;
 }
 
-h2 {
+.archive {
+  font-family: 'Dancing Script', cursive;
+  width: 80vw;
+  margin-top: 2em;
+  margin-left: 10vw;
+}
+
+.archive h2 {
   margin-bottom: 1em;
   margin-top: 1em;
   text-align: center;
-  font-size: 1.8em;
+  font-size: 4em;
+}
+
+.archive-text {
+  width: 70vw;
+  margin-left: 15vw;
+  font-size: 1.5em;
+  margin-bottom: 1em;
 }
 
 

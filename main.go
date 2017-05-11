@@ -35,7 +35,7 @@ func main() {
 	http.HandleFunc("/admin", admin(session))
 	http.HandleFunc("/create", create(session))
 	http.HandleFunc("/about", about)
-	http.HandleFunc("/archive", create(session))
+	http.HandleFunc("/archive", archive(session))
 
 	http.ListenAndServe(":3000", nil)
 }
@@ -51,6 +51,7 @@ func about(w http.ResponseWriter, r *http.Request) {
 
 func archive(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("ARCHIVE")
 		session := s.Copy()
 		defer session.Close()
 
@@ -116,6 +117,7 @@ func index(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 
 func create(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("CREATE")
 		if r.Method == "GET" {
 			tpl, err := template.New("").ParseFiles("templates/create.html", "templates/base.html")
 			err = tpl.ExecuteTemplate(w, "base", nil)
