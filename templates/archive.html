@@ -1,8 +1,9 @@
 {{define "content"}}
   <div class="archive">
-    <h2>Archive</h2>
     {{range .}}
-        <p class="archive-text">{{.Text}}</p>
+        <div class="archive-text">
+          <p>{{.Text}}</p>
+        </div>
       {{end}}
   </div>
   {{end}}

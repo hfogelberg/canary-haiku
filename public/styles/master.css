@@ -154,9 +154,9 @@ header  a:active {
 
 .archive {
   font-family: 'Dancing Script', cursive;
-  width: 80vw;
+  width: 70vw;
   margin-top: 2em;
-  margin-left: 10vw;
+  margin-left: 15vw;
 }
 
 .archive h2 {
@@ -167,12 +167,15 @@ header  a:active {
 }
 
 .archive-text {
-  width: 70vw;
-  margin-left: 15vw;
-  font-size: 1.5em;
-  margin-bottom: 1em;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
+.archive-text p {
+  font-size: 4em;
+}
 
 a {
   color: rgba(52, 73, 94,1.0);
