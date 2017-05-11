@@ -1,12 +1,13 @@
 html, body {
   font-family: sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 300;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #EDCDC2;
   font-family: 'Dancing Script', cursive;
+  font-family: 'Lato', sans-serif;
 }
 
 .container {
@@ -15,9 +16,14 @@ html, body {
   display: flex;
 }
 
+/*Header*/
 header {
   height: 10vh;
   line-height: 10vh;
+  position: fixed;
+  top:0;
+  width: 100%;
+  font-family: 'Dancing Script', cursive;
   background-color: rgba(54, 157, 191, 0.5);
 }
 
@@ -26,6 +32,51 @@ h1 {
   font-size: 1.8em;
   font-weight: 400;
 }
+
+
+header ul {
+  margin-left: 1em;
+  margin-right: 1em;
+  list-style: none;
+  display: flex;
+  line-height: 4em;
+}
+
+header  li {
+  flex: 0 0 auto;
+  margin: 0.2em;
+}
+
+header  li:nth-child(1) {
+  margin-right: auto;
+}
+
+header  a {
+  font-size: 1.4em;
+  color: rgba(236, 240, 241,1.0);
+  font-weight: 300;
+}
+
+header  a:hover {
+  text-decoration: none;
+}
+
+header  a:link {
+  text-decoration: none;
+}
+
+header  a:visited{
+  text-decoration: none;
+}
+
+header  a:focus {
+  text-decoration: none;
+}
+
+header  a:active {
+  text-decoration: none;
+}
+
 
 .container {
   height: 90vh;
@@ -41,6 +92,74 @@ h1 {
 
 
 .daily-haiku p {
+  font-family: 'Dancing Script', cursive;
   color: #28768F;
   font-size: 6em;
+}
+
+.admin {
+  font-family: 'Lato', sans-serif;
+  width: 80vw;
+  margin-top: 2em;
+  margin-left: 10vw;
+}
+
+.sub {
+  margin-top: 0.5em;
+  font-size: 0.8em;
+  font-style: italic;
+}
+
+.about {
+  width: 70vw;
+  max-width: 70ch;
+  margin-left: 15vw;
+  margin-top: 2em;
+  padding-top: 1em;
+  font-size: 1.25em;
+  font-family: 'Lato', sans-serif;
+  color: #495867;
+}
+
+h2 {
+  margin-bottom: 1em;
+  margin-top: 1em;
+  text-align: center;
+  font-size: 1.8em;
+}
+
+
+a {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+a:link {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+a:visited {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+a:hover {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+a:active {
+  color: rgba(52, 73, 94,1.0);
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2em;
 }

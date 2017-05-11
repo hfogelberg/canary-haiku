@@ -1,10 +1,10 @@
 {{define "content"}}
   <div class="admin">
-    <h1>Canary Haiku</h1>
+    <h2>Admin</h2>
 
     {{range .}}
-        <p>{{.Text}}</p>
-        <p>{{.User}} - {{.When}}</p>
+        <p class="text">{{.Text}}</p>
+        <p class='sub'>{{.User}} - {{.When}}</p>
         <hr>
       {{end}}
   </div>

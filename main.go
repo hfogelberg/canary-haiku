@@ -30,16 +30,22 @@ func main() {
 
 	// serve assets
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
-	// fs := http.FileServer(http.Dir("public"))
-	// http.Handle("/public/styles/", http.StripPrefix("/public/", fs))
-
-	// http.Handle("/canary-haiku/public/styles", http.StripPrefix("/canary-haiku/public/styles", http.FileServer(http.Dir("./canary-haiku/public/styles"))))
 
 	http.HandleFunc("/", index(session))
 	http.HandleFunc("/admin", admin(session))
 	http.HandleFunc("/create", create(session))
+	http.HandleFunc("/about", about)
 
 	http.ListenAndServe(":3000", nil)
+}
+
+func about(w http.ResponseWriter, r *http.Request) {
+	tpl, err := template.New("").ParseFiles("templates/about.html", "templates/base.html")
+	err = tpl.ExecuteTemplate(w, "base", nil)
+	if err != nil {
+		log.Fatalln(err)
+		return
+	}
 }
 
 func admin(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
