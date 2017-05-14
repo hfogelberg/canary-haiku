@@ -1,0 +1,22 @@
+{{define "content"}}
+<div class="signup">
+  <form action="/signup" method="post">
+    <div>
+      <label for="username">Username</label>
+      <input type="text" name="username" id="username">
+    </div>
+    <div>
+      <label for="password">Password</label>
+      <input type="text" name="password" id="password">
+    </div>
+    <div>
+      <label for="repeat">Repeat</label>
+      <input type="text" name="repeat" id="repeat">
+    </div>
+    <div>
+      <button id="save">Sign Up </button>
+    </div>
+  </form>
+</div>
+
+{{end}}
