@@ -5,8 +5,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (connection *Connection) Signup(w http.ResponseWriter, r *http.Request) {
@@ -24,22 +22,20 @@ func (connection *Connection) Signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var user User
-		user.Username = r.PostFormValue("username")
-		password := []byte(r.PostFormValue("password"))
-		hashedPassword, err2 := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
-		if err2 != nil {
-			log.Println(err2)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		user.Password = string(hashedPassword)
+		username := r.PostFormValue("username")
+		password := r.PostFormValue("password")
 
-		err = connection.SaveUser(user)
+		_, err = connection.UsernameIsInDb(username)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+		}
+
+		token, err := connection.SaveUser(username, password)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		token := CreateToken(user.Username)
+		// Create cookie with session token
 		expiration := time.Now().Add(60 * time.Second)
 		cookie := http.Cookie{Name: "token", Value: token, Expires: expiration}
 		http.SetCookie(w, &cookie)

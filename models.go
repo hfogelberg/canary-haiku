@@ -16,8 +16,9 @@ type Haiku struct {
 }
 
 type User struct {
-	Username string `json:"username" bson:"username"`
-	Password string `json:"password" bson:"password"`
+	Username string    `json:"username" bson:"username"`
+	Password string    `json:"password" bson:"password"`
+	Tokens   [1]string `json:"tokens" bson:"tokens"`
 }
 
 type JwtClaims struct {
