@@ -4,28 +4,38 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/gorilla/mux"
+	"github.com/urfave/negroni"
 	mgo "gopkg.in/mgo.v2"
 )
 
 var tpl *template.Template
 
 func main() {
-	session, err := mgo.Dial("mongodb://localhost:27017")
+	// Hook up Db
+	session, err := mgo.Dial(MongoDBHost)
 	if err != nil {
 		panic(err)
 	}
 	defer session.Close()
 	session.SetMode(mgo.Monotonic, true)
+	connection := Connection{session.DB(MongoDb)}
+
+	router := mux.NewRouter().StrictSlash(true)
 
 	// serve assets
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
+	static := http.StripPrefix("/public/", http.FileServer(http.Dir("public")))
+	router.PathPrefix("/public/").Handler(static)
 
-	http.HandleFunc("/admin", Admin(session))
-	http.HandleFunc("/create", Create(session))
-	http.HandleFunc("/about", About)
-	http.HandleFunc("/archive", Archive(session))
-	http.HandleFunc("/signup", Signup(session))
-	http.HandleFunc("/", Index(session))
+	// Routes
+	router.HandleFunc("/admin", connection.Admin)
+	router.HandleFunc("/create", connection.Create)
+	router.HandleFunc("/archive", connection.Archive)
+	router.HandleFunc("/signup", connection.Signup)
+	router.HandleFunc("/", connection.Index)
 
-	http.ListenAndServe(":3000", nil)
+	// Start server
+	n := negroni.Classic()
+	n.UseHandler(router)
+	n.Run(Port)
 }

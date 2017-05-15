@@ -3,6 +3,8 @@ package main
 import (
 	"time"
 
+	mgo "gopkg.in/mgo.v2"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -18,7 +20,11 @@ type User struct {
 	Password string `json:"password" bson:"password"`
 }
 
-type Claims struct {
-	Username string `json:"username`
+type JwtClaims struct {
+	Username string `json:"username"`
 	jwt.StandardClaims
+}
+
+type Connection struct {
+	Db *mgo.Database
 }

@@ -9,7 +9,7 @@ import (
 func CreateToken(username string) string {
 	expireToken := time.Now().Add(time.Minute * 1).Unix()
 
-	claims := Claims{
+	claims := JwtClaims{
 		username,
 		jwt.StandardClaims{
 			ExpiresAt: expireToken,
