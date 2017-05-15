@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"gopkg.in/mgo.v2/bson"
 )
 
 func About(w http.ResponseWriter, r *http.Request) {
@@ -15,61 +13,49 @@ func About(w http.ResponseWriter, r *http.Request) {
 	err = tpl.ExecuteTemplate(w, "base", nil)
 	if err != nil {
 		log.Fatalln(err)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 func (connection *Connection) Archive(w http.ResponseWriter, r *http.Request) {
-	var Haikus []*Haiku
-	err := connection.Db.C("verses").Find(nil).All(&Haikus)
-	if err != nil {
-		log.Fatalln(err)
-		return
-	}
-
-	tpl, err := template.New("").ParseFiles("templates/archive.html", "templates/base.html")
-	err = tpl.ExecuteTemplate(w, "base", Haikus)
+	haikus, err := connection.GetHaikus()
 	if err != nil {
 		log.Println(err)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	tpl, err = template.New("").ParseFiles("templates/archive.html", "templates/base.html")
+	err = tpl.ExecuteTemplate(w, "base", haikus)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 func (connection *Connection) Admin(w http.ResponseWriter, r *http.Request) {
-	log.Println("GET ADMIN")
-
-	var Haikus []*Haiku
-	err := connection.Db.C("verses").Find(nil).All(&Haikus)
+	haikus, err := connection.GetHaikus()
 	if err != nil {
-		log.Fatalln(err)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	tpl, err := template.New("").ParseFiles("templates/admin.html", "templates/base.html")
-	err = tpl.ExecuteTemplate(w, "base", Haikus)
+	err = tpl.ExecuteTemplate(w, "base", haikus)
 	if err != nil {
 		log.Println(err)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
 func (connection *Connection) Index(w http.ResponseWriter, r *http.Request) {
-	log.Println("GET INDEX")
-
-	var Verse *Haiku
-	// d := time.Now()
-	//err := session.DB("canaryhaiku").C("verses").Find(bson.M{"when": bson.M{"$gte": d}}).One(&Verse)
-	err := connection.Db.C("verses").Find(bson.M{"user": "bosse"}).One(&Verse)
+	haiku, err := connection.GetDailyHaiku()
 	if err != nil {
-		log.Println(err)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-
 	tpl, err := template.New("").ParseFiles("templates/index.html", "templates/base.html")
-	err = tpl.ExecuteTemplate(w, "base", Verse)
+	err = tpl.ExecuteTemplate(w, "base", haiku)
 	if err != nil {
 		log.Println(err)
-		return
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -97,12 +83,11 @@ func (connection *Connection) Create(w http.ResponseWriter, r *http.Request) {
 		// haiku.Display = time.Parse("2006-01-02", dt)
 		haiku.When = time.Now()
 
-		err = connection.Db.C("verses").Insert(&haiku)
+		err = connection.CreateHaiku(&haiku)
 		if err != nil {
-			log.Println("Failed insert")
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		http.Redirect(w, r, "/admin/", http.StatusSeeOther)
+
+		http.Redirect(w, r, "/admin/", http.StatusInternalServerError)
 	}
 }

@@ -15,11 +15,9 @@ func (connection *Connection) Signup(w http.ResponseWriter, r *http.Request) {
 		err = tpl.ExecuteTemplate(w, "base", nil)
 		if err != nil {
 			log.Println(err)
-			return
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	} else {
-		log.Println("POST SIGNUP")
-
 		err := r.ParseForm()
 		if err != nil {
 			log.Println(err)
@@ -32,14 +30,13 @@ func (connection *Connection) Signup(w http.ResponseWriter, r *http.Request) {
 		hashedPassword, err2 := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 		if err2 != nil {
 			log.Println(err2)
-			return
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		user.Password = string(hashedPassword)
 
 		err = connection.SaveUser(user)
 		if err != nil {
-			//TODO Send error response
-			return
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
 		token := CreateToken(user.Username)
@@ -52,7 +49,7 @@ func (connection *Connection) Signup(w http.ResponseWriter, r *http.Request) {
 		err = tpl.ExecuteTemplate(w, "base", nil)
 		if err != nil {
 			log.Println(err)
-			return
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }
