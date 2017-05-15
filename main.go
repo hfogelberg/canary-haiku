@@ -45,12 +45,12 @@ func main() {
 	// serve assets
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
 
-	http.HandleFunc("/", index(session))
 	http.HandleFunc("/admin", admin(session))
 	http.HandleFunc("/create", create(session))
 	http.HandleFunc("/about", about)
 	http.HandleFunc("/archive", archive(session))
 	http.HandleFunc("/signup", signup(session))
+	http.HandleFunc("/", index(session))
 
 	http.ListenAndServe(":3000", nil)
 }
@@ -67,7 +67,6 @@ func about(w http.ResponseWriter, r *http.Request) {
 func signup(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			log.Println("GET SIGNUP")
 			tpl, err := template.New("").ParseFiles("templates/signup.html", "templates/base.html")
 			err = tpl.ExecuteTemplate(w, "base", nil)
 			if err != nil {
@@ -92,7 +91,6 @@ func signup(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			user.Password = string(hashedPassword)
-			log.Println(user)
 
 			session := s.Copy()
 			defer session.Close()
@@ -104,8 +102,41 @@ func signup(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			token := createToken(user.Username)
+			expiration := time.Now().Add(60 * time.Second)
+			cookie := http.Cookie{Name: "token", Value: token, Expires: expiration}
+			http.SetCookie(w, &cookie)
+
+			http.Redirect(w, r, "/admin", http.StatusFound)
+			tpl, err := template.New("").ParseFiles("templates/admin.html", "templates/base.html")
+			err = tpl.ExecuteTemplate(w, "base", nil)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 		}
 	}
+}
+
+func createToken(username string) string {
+	expireToken := time.Now().Add(time.Minute * 1).Unix()
+
+	claims := Claims{
+		username,
+		jwt.StandardClaims{
+			ExpiresAt: expireToken,
+			Issuer:    "localhost:3000",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(hmacSampleSecret)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return tokenString
 }
 
 func archive(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
@@ -131,6 +162,7 @@ func archive(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 
 func admin(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET ADMIN")
 		session := s.Copy()
 		defer session.Close()
 
@@ -152,6 +184,7 @@ func admin(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 
 func index(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET INDEX")
 		session := s.Copy()
 		defer session.Close()
 
@@ -207,7 +240,7 @@ func create(s *mgo.Session) func(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			http.Redirect(w, r, "/admin", http.StatusSeeOther)
+			http.Redirect(w, r, "/admin/", http.StatusSeeOther)
 		}
 	}
 }
