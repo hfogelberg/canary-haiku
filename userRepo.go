@@ -7,7 +7,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (connection *Connection) SaveUser(username string, pwd string) (token string, err error) {
+func (connection *Connection) SaveUser(username string, pwd string) (tkn string, err error) {
 	password := []byte(pwd)
 	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
@@ -18,7 +18,7 @@ func (connection *Connection) SaveUser(username string, pwd string) (token strin
 
 	var user User
 	user.Username = username
-	user.Password = string(hashedPassword)
+	user.Password = hashedPassword
 	user.Tokens[0] = token
 
 	log.Println(user)
@@ -30,6 +30,28 @@ func (connection *Connection) SaveUser(username string, pwd string) (token strin
 	}
 	return token, nil
 }
+
+// func (connection *Connection) LoginUser(username string, pwd string) (token string, err error) {
+// 	err = bcrypt.CompareHashAndPassword(hashedPassword, password)
+
+// 	user, err := connection.UsernameIsInDb(username)
+// 	if err != nil {
+
+// 	}
+
+// 	password := []byte(pwd)
+// 	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+// 	if err != nil {
+// 		log.Println(err)
+// 		return "token", err
+// 	}
+
+// 	err = bcrypt.CompareHashAndPassword(hashedPassword, password)
+
+// 	token := CreateToken(username)
+
+// 	return token, nil
+// }
 
 func (connection *Connection) UsernameIsInDb(username string) (u User, e error) {
 	// TODO Error handling

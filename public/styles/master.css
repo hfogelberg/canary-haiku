@@ -85,6 +85,11 @@ header  a:active {
 
 .container {
   height: 90vh;
+  width: 80vw;
+  margin-top: 10vh;
+  padding-top: 2em;
+  margin-left: 10vw;
+}
 }
 
 .daily-haiku {
@@ -130,9 +135,6 @@ header  a:active {
 
 .admin {
   font-family: 'Lato', sans-serif;
-  width: 80vw;
-  margin-top: 2em;
-  margin-left: 10vw;
 }
 
 .sub {
