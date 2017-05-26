@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gorilla/sessions"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,7 +20,6 @@ func (connection *Connection) GetLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (connection *Connection) PostLogin(w http.ResponseWriter, r *http.Request) {
-
 	var user User
 
 	err := r.ParseForm()
@@ -50,17 +50,19 @@ func (connection *Connection) PostLogin(w http.ResponseWriter, r *http.Request) 
 
 		// Password OK. Generate token, create cookie and redirect to admin
 		token := CreateToken(username)
-		expiration := time.Now().Add(60 * time.Second)
-		cookie := http.Cookie{Name: "token", Value: token, Expires: expiration}
-		http.SetCookie(w, &cookie)
-
-		http.Redirect(w, r, "/admin", http.StatusFound)
-		tpl, err := template.New("").ParseFiles("templates/admin.html", "templates/base.html")
-		err = tpl.ExecuteTemplate(w, "base", nil)
-		if err != nil {
-			log.Println(err)
+		if err := connection.PushToken(username, token); err != nil {
+			log.Println("Error pushing token to Db")
+			log.Print(err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+
+		expiration := time.Now().Add(5 * time.Minute)
+		cookie := http.Cookie{Name: "haikuToken", Value: token, Expires: expiration}
+		http.SetCookie(w, &cookie)
+		log.Println("Cookie set")
+
+		log.Println("Redirecting to admin")
+		connection.GetAdmin(w, r)
 
 	} else {
 		// Unknown user
@@ -92,21 +94,21 @@ func (connection *Connection) PostSignup(w http.ResponseWriter, r *http.Request)
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 	}
 
-	token, err := connection.SaveUser(username, password)
-	if err != nil {
+	token := CreateToken(username)
+	if err := connection.SaveUser(username, password, token); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	// Create cookie with session token
-	expiration := time.Now().Add(60 * time.Second)
-	cookie := http.Cookie{Name: "token", Value: token, Expires: expiration}
-	http.SetCookie(w, &cookie)
+	saveSessionToken(token)
 
+	log.Println("All done. Redirecting to admin")
 	http.Redirect(w, r, "/admin", http.StatusFound)
-	tpl, err := template.New("").ParseFiles("templates/admin.html", "templates/base.html")
-	err = tpl.ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+}
+
+func saveSessionToken(token string) {
+	log.Println("Saving to store")
+	store := sessions.NewCookieStore([]byte(SessionsSecret))
+	session, _ := store.Get(r, SessionName)
+	session.Values["haikuToken"] = token
+	session.Save(r, w)
 }

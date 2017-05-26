@@ -4,54 +4,32 @@ import (
 	"log"
 
 	"golang.org/x/crypto/bcrypt"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func (connection *Connection) SaveUser(username string, pwd string) (tkn string, err error) {
+func (connection *Connection) SaveUser(username string, pwd string, token string) (err error) {
 	password := []byte(pwd)
 	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
 		log.Println(err)
-		return "token", err
+		return err
 	}
-	token := CreateToken(username)
 
 	var user User
 	user.Username = username
 	user.Password = hashedPassword
-	user.Tokens[0] = token
+	user.Tokens = append(user.Tokens, token)
 
 	log.Println(user)
 
 	err = connection.Db.C("users").Insert(&user)
 	if err != nil {
 		log.Println("Failed insert")
-		return "", err
+		return err
 	}
-	return token, nil
+	return nil
 }
-
-// func (connection *Connection) LoginUser(username string, pwd string) (token string, err error) {
-// 	err = bcrypt.CompareHashAndPassword(hashedPassword, password)
-
-// 	user, err := connection.UsernameIsInDb(username)
-// 	if err != nil {
-
-// 	}
-
-// 	password := []byte(pwd)
-// 	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
-// 	if err != nil {
-// 		log.Println(err)
-// 		return "token", err
-// 	}
-
-// 	err = bcrypt.CompareHashAndPassword(hashedPassword, password)
-
-// 	token := CreateToken(username)
-
-// 	return token, nil
-// }
 
 func (connection *Connection) UsernameIsInDb(username string) (u User, e error) {
 	// TODO Error handling
@@ -64,4 +42,25 @@ func (connection *Connection) UsernameIsInDb(username string) (u User, e error) 
 	}
 
 	return user, nil
+}
+
+func (connection *Connection) PushToken(username string, token string) (e error) {
+	log.Println("Push token")
+	user := User{}
+
+	change := mgo.Change{
+		Update:    bson.M{"$push": bson.M{"tokens": token}},
+		ReturnNew: true,
+	}
+
+	_, err := connection.Db.C("users").Find(bson.M{"username": username}).Apply(change, &user)
+	if err != nil {
+		log.Println("Error updating user with token")
+		log.Print(err)
+		return err
+	}
+
+	log.Println("OK appending token")
+
+	return nil
 }

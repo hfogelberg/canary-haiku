@@ -1,10 +1,12 @@
 package main
 
 const (
-	MongoDBHost = "localhost"
-	MongoDb     = "canaryhaiku"
-	HmacSecret  = "secret"
-	Port        = ":3000"
+	MongoDBHost    = "localhost"
+	MongoDb        = "canaryhaiku"
+	HmacSecret     = "secret"
+	SessionsSecret = "secret"
+	SessionName    = "haikuSession"
+	Port           = ":3000"
 )
 
 var hmacSampleSecret = []byte(HmacSecret)

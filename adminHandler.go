@@ -10,8 +10,10 @@ import (
 
 func (connection *Connection) GetAdmin(w http.ResponseWriter, r *http.Request) {
 	log.Println("GET ADMIN")
+
 	haikus, err := connection.GetHaikus()
 	if err != nil {
+		log.Println("Get haikus failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 

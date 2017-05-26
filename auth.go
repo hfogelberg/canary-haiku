@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -55,10 +54,4 @@ func CreateToken(username string) string {
 	log.Println("Token created ", tokenString)
 
 	return tokenString
-}
-
-func (connection *Connection) ValidateUser(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	// do some stuff before
-	next(w, r)
-	// do some stuff after
 }
